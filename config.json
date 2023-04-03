@@ -1,0 +1,13 @@
+﻿{
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "",
+    "database": "dspx_db"
+  },
+  "secret": "62=3%PLypdLT{pCu",
+  "jwksUri": "https://example.auth0.com/.well-known/jwks.json",
+  "audience": "https://example.com/api",
+  "issuer": "https://example.auth0.com/"
+}

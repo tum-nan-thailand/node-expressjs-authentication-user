@@ -16,6 +16,8 @@ app.use(function (req, res, next) {
 });
 
 const indexRouter = require("./routes/index");
+ 
+
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -26,5 +28,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/image", express.static(path.join(__dirname, "public/images")));
 
 app.use("/", indexRouter);
+
+app.use('/users', require('./models/users/users.controller'));
 
 module.exports = app;

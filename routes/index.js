@@ -6,4 +6,7 @@ router.get('/', function(req, res, next) {
   res.json({"MSG":"HELLO"})
 });
 
+
+router.use('/users', require('../models/users/users.controller'));
+
 module.exports = router;
