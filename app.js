@@ -1,9 +1,10 @@
-const express = require("express"); //standart
+const express = require("express"); 
 const app = express();
-const cors = require("cors");
-app.use(cors());
+const cors = require("cors");;
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const bodyParser = require('body-parser');
+const errorHandler = require('./_middleware/error-handler');
 const logger = require("morgan");
 
 app.use(function (req, res, next) {
@@ -15,20 +16,22 @@ app.use(function (req, res, next) {
   next();
 });
 
-const indexRouter = require("./routes/index");
- 
-
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-// /************************************************ */
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cors());
+
 
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/image", express.static(path.join(__dirname, "public/images")));
 
-app.use("/", indexRouter);
-
+// api routes
+app.use("/", require("./routes/index"));
 app.use('/users', require("./module/users.controller"));
 
+// global error handler
+app.use(errorHandler);
 module.exports = app;

@@ -1,7 +1,7 @@
-const config = require('../config');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const db = require('../_helpers/db');
+const config = require("../config");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const db = require("../_helpers/db");
 
 module.exports = {
   authenticate,
@@ -12,81 +12,79 @@ module.exports = {
   delete: _delete,
 };
 
-async function authenticate(req, res, next) {
-  const { username, password } = req.body;
+async function authenticate({ username, password }) {
+  const user = await db.User.scope("withHash").findOne({ where: { username } });
 
-  const user = await db.User.scope('withHash').findOne({ where: { username } });
+  if (!user || !(await bcrypt.compare(password, user.hash)))
+    throw "Username or password is incorrect";
 
-  if (!user || !(await bcrypt.compare(password, user.hash))) {
-    return res.status(400).json({ message: 'Username or password is incorrect' });
+  // authentication successful
+  const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: "7d" });
+  return { ...omitHash(user.get()), token };
+}
+
+async function getAll() {
+  return await db.User.findAll();
+}
+
+async function getById(id) {
+  return await getUser(id);
+}
+
+async function create(body) {
+  // validate
+  if (await db.User.findOne({ where: { username: body.username } })) {
+    throw 'Username "' + body.username + '" is already taken';
   }
 
-  const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: '1h' });
-  const { hash, ...userWithoutHash } = user.get();
-
-  res.json({ ...userWithoutHash, token });
-}
-
-async function getAll(req, res, next) {
-  const users = await db.User.findAll();
-  res.json(users);
-}
-
-async function getById(req, res, next) {
-  const user = await getUser(req.params.id);
-  res.json(user);
-}
-
-async function create(req, res, next) {
-  const { username, password } = req.body;
-
-  // validate
-  if (await db.User.findOne({ where: { username } })) {
-    return res.status(400).json({ message: `Username "${username}" is already taken` });
+  // hash password
+  if (body.password) {
+    body.hash = await bcrypt.hash(body.password, 10);
   }
 
-  const user = await db.User.create({
-    username,
-    hash: await bcrypt.hash(password, 10),
-    roleId: 1,
-  });
-
-  const { hash, ...userWithoutHash } = user.get();
-
-  res.json(userWithoutHash);
+  // save user
+  await db.User.create(body);
 }
 
-async function update(req, res, next) {
-  const user = await getUser(req.params.id);
-
-  const { username, password } = req.body;
+async function update(id, params) {
+  const user = await getUser(id);
 
   // validate
-  const usernameChanged = username && user.username !== username;
-  if (usernameChanged && await db.User.findOne({ where: { username } })) {
-    return res.status(400).json({ message: `Username "${username}" is already taken` });
+  const usernameChanged = params.username && user.username !== params.username;
+  if (
+    usernameChanged &&
+    (await db.User.findOne({ where: { username: params.username } }))
+  ) {
+    throw 'Username "' + params.username + '" is already taken';
   }
 
   // hash password if it was entered
-  if (password) {
-    user.hash = await bcrypt.hash(password, 10);
+  if (params.password) {
+    params.hash = await bcrypt.hash(params.password, 10);
   }
 
-  Object.assign(user, { username });
+  // copy params to user and save
+  Object.assign(user, params);
   await user.save();
 
-  const { hash, ...userWithoutHash } = user.get();
-  res.json(userWithoutHash);
+  return omitHash(user.get());
 }
 
-async function _delete(req, res, next) {
-  const user = await getUser(req.params.id);
+async function _delete(id) {
+  const user = await getUser(id);
   await user.destroy();
-  res.json({ message: 'User deleted successfully' });
 }
+
+// helper functions
 
 async function getUser(id) {
+  console.log(id);
   const user = await db.User.findByPk(id);
-  if (!user) throw 'User not found';
+  if (!user) throw "User not found";
   return user;
+}
+
+function omitHash(user) {
+  const { hash, ...userWithoutHash } = user;
+  return userWithoutHash;
 }
