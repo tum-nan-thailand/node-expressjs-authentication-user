@@ -8,7 +8,7 @@ require("dotenv/config");
 const app = require("../app");
 const debug = require("debug")("api-dev:server");
 const http = require("http");
-const config = require("../config/config.js");
+const config = require("../config/index.js");
 
 /*process.env.NODE_ENV
 config.HOST*/

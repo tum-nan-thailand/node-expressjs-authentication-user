@@ -1,4 +1,4 @@
-const config = require('./config.json');
+const config = require('../config');
 const mysql = require('mysql2/promise');
 const { Sequelize } = require('sequelize');
 
@@ -16,7 +16,7 @@ async function initialize() {
     const sequelize = new Sequelize(database, user, password, { dialect: 'mysql' });
 
     // init models and add them to the exported db object
-    db.User = require('../model/user.model')(sequelize);
+    db.User = require('../models/users/user.model')(sequelize);
 
     // sync all models with database
     await sequelize.sync();

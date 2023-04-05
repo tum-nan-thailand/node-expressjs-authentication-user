@@ -29,6 +29,6 @@ app.use("/image", express.static(path.join(__dirname, "public/images")));
 
 app.use("/", indexRouter);
 
-app.use('/users', require('./models/users/users.controller'));
+app.use('/users', require("./module/users.controller"));
 
 module.exports = app;

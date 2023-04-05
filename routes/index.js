@@ -7,6 +7,5 @@ router.get('/', function(req, res, next) {
 });
 
 
-router.use('/users', require('../models/users/users.controller'));
 
 module.exports = router;
